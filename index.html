@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabai App - Connected with LINE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #FBF9F6;
+            color: #4A4641;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #FFFFFF;
+            padding: 35px 25px;
+            border-radius: 32px;
+            box-shadow: 0 10px 30px rgba(180,170,160,0.1);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            border: 1px solid #F0EAE1;
+        }
+        .brand-image {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 3px solid #EAE3D5;
+        }
+        h1 {
+            color: #5C554B;
+            font-size: 32px;
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+        p {
+            color: #8C8375;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+        .input-box {
+            background-color: #FDFDFD;
+            border: 2px solid #EFEAE2;
+            border-radius: 18px;
+            padding: 12px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .input-box:focus-within {
+            border-color: #8E9B84;
+            background-color: #F8F9F6;
+        }
+        .label-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: #70675A;
+            text-align: left;
+        }
+        .label-sub {
+            font-size: 11px;
+            color: #A69C8E;
+            display: block;
+        }
+        input {
+            width: 45%;
+            font-family: 'Prompt', sans-serif;
+            font-size: 24px;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            text-align: right;
+            color: #4A4641;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            background-color: #8E9B84;
+            color: white;
+            font-family: 'Prompt', sans-serif;
+            font-size: 17px;
+            font-weight: 500;
+            padding: 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(142,155,132,0.2);
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: #7A8771;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img id="user-avatar" src="https://images.unsplash.com/photo-1581579438747-1dc8d1e0ca96?auto=format&fit=crop&w=300&q=80" class="brand-image" alt="Profile">
+    <h1 id="app-title">Sabai</h1>
+    <p id="greeting-text">สวัสดีค่ะ บันทึกค่าสุขภาพเช้านี้กันนะ</p>
+    
+    <div class="input-box">
+        <div class="label-text">ตัวบน (SYS) <span class="label-sub">mmHg</span></div>
+        <input type="number" id="sys" placeholder="120">
+    </div>
+    
+    <div class="input-box">
+        <div class="label-text">ตัวล่าง (DIA) <span class="label-sub">mmHg</span></div>
+        <input type="number" id="dia" placeholder="80">
+    </div>
+    
+    <div class="input-box">
+        <div class="label-text">ชีพจร (Pulse) <span class="label-sub">ครั้ง/นาที</span></div>
+        <input type="number" id="pulse" placeholder="72">
+    </div>
+    
+    <button id="submit-btn" onclick="sendData()">บันทึกข้อมูลส่งให้ลูกหลาน</button>
+</div>
+
+<script>
+let currentUserId = "GUEST_USER";
+let currentUserName = "ผู้ใช้งานทั่วไป";
+
+window.onload = function() {
+    initializeLiff();
+};
+
+function initializeLiff() {
+    liff.init({ liffId: "2010148633-DxpV1xNu" })
+    .then(() => {
+        if (liff.isLoggedIn()) {
+            getUserProfile();
+        } else {
+            console.log("เปิดใช้งานในโหมดบุคคลทั่วไป");
+        }
+    })
+    .catch((err) => {
+        console.error("LIFF Initialization failed ", err);
+    });
+}
+
+function getUserProfile() {
+    liff.getProfile()
+    .then(profile => {
+        currentUserId = profile.userId;
+        currentUserName = profile.displayName;
+        
+        document.getElementById('greeting-text').innerText = `สวัสดีค่ะ คุณ${currentUserName} บันทึกค่าสุขภาพกันนะ`;
+        if(profile.pictureUrl) {
+            document.getElementById('user-avatar').src = profile.pictureUrl;
+        }
+    })
+    .catch((err) => {
+        console.error('Error getting profile', err);
+    });
+}
+
+function sendData() {
+    const sysValue = document.getElementById('sys').value;
+    const diaValue = document.getElementById('dia').value;
+    const pulseValue = document.getElementById('pulse').value;
+    const btn = document.getElementById('submit-btn');
+    
+    if(!sysValue || !diaValue || !pulseValue) {
+        alert('กรุณากรอกข้อมูลให้ครบถ้วนก่อนนะคะ');
+        return;
+    }
+
+    btn.innerText = "กำลังบันทึกข้อมูล...";
+    btn.disabled = true;
+
+    const url = "https://sheetdb.io/api/v1/o9s8nb4g5g614"; 
+    
+    const payload = {
+        "data": [
+            {
+                "User_ID": currentUserId,
+                "Date_Time": new Date().toLocaleString('th-TH'),
+                "SYS (ตัวบน)": sysValue,
+                "DIA (ตัวล่าง)": diaValue,
+                "Pulse (ชีพจร)": pulseValue,
+                "Status": (sysValue > 140 || diaValue > 90) ? "ความดันสูง" : "ปกติ",
+                "Note": `บันทึกโดยคุณ: ${currentUserName}`
+            }
+        ]
+    };
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(`บันทึกสำเร็จ! ข้อมูลของ คุณ${currentUserName} ถูกส่งเข้า Google Sheets เรียบร้อยแล้วค่ะ ❤️`);
+        document.getElementById('sys').value = '';
+        document.getElementById('dia').value = '';
+        document.getElementById('pulse').value = '';
+    })
+    .catch(error => {
+        alert('อุ๊ย เกิดข้อผิดพลาดนิดหน่อย ลองใหม่อีกครั้งนะคะ');
+        console.error(error);
+    })
+    .finally(() => {
+        btn.innerText = "บันทึกข้อมูลส่งให้ลูกหลาน";
+        btn.disabled = false;
+    });
+}
+</script>
+
+</body>
+</html>
